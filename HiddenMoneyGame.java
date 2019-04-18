@@ -4,6 +4,7 @@ import java.awt.Graphics;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 class GraphicObject extends JPanel {
 
@@ -11,6 +12,8 @@ class GraphicObject extends JPanel {
     Color objectColor;
     int objectWidth, objectHeight;
     int amountValue = -1;
+    int clickcount = 0;
+    int totalAmount = 0;
 
     public GraphicObject() {
 
@@ -58,8 +61,8 @@ class GraphicObject extends JPanel {
 
     public void paintComponent(Graphics g) {
         //My test
-            System.out.println("PAINT EXECUTED");
 
+        if (clickcount != 6){
             g.setColor(Color.black);
             g.drawOval(0, 0, objectWidth, objectHeight);
 
@@ -70,18 +73,30 @@ class GraphicObject extends JPanel {
                 g.setColor(Color.black);
                 g.setFont(new Font("Tahoma", Font.BOLD, 10));
                 g.drawString("" + amountValue, objectWidth/5, objectHeight/2);
-                System.out.println("******String EXCUTED*********");
+                clickcount++;
+                totalAmount += amountValue;
             }
+        }
+        else{
+            System.out.println("PAINT EXECUTED");
+            g.setColor(Color.red);
+            g.setFont(new Font("Tahoma", Font.BOLD, 150));
+            g.drawString("You Win " + totalAmount, getWidth() / 2, getHeight() / 2);
+        }
     }
 }
-    public class HiddenMoneyGame extends Frame {
+
+    public class HiddenMoneyGame extends JFrame {
 
         Point[] locationPoints = new Point[100];
         GraphicObject[] graphicObjectsList = new GraphicObject[100];
         int ballDiameter;
         int[] amountArr = new int[101];
-        int clickcount = 0;
         int totalAmount = 0;
+        int clickcount = 0;
+        GridLayout gl = new GridLayout(10, 10, 0, 0);
+        Panel pan = new Panel(gl);
+
 
         public void iniAmountArr() {
             for (int i = 0, j = 0; i < amountArr.length; i++, j += 100)
@@ -93,8 +108,6 @@ class GraphicObject extends JPanel {
             super(title);
             setSize(width, height);
             setLocation(locX, locY);
-            GridLayout gl = new GridLayout(10, 10, 0, 0);
-            setLayout(gl);
 
             int curX = 0;
             int curY = 0;
@@ -115,16 +128,18 @@ class GraphicObject extends JPanel {
             }
 
             for (int i = 0; i != graphicObjectsList.length; i++) {
+
                 Color randomColor = new Color((int) (Math.random() * 255 + 1),
                         (int) (Math.random() * 255 + 1),
                         (int) (Math.random() * 255 + 1));
 
                 graphicObjectsList[i] = new GraphicObject(locationPoints[i], randomColor, ballDiameter, ballDiameter);
-                System.out.println("OBJECT ADD");
-                graphicObjectsList[i].addMouseListener(new MouseDetected());
-                add(graphicObjectsList[i]);
-            }
 
+                graphicObjectsList[i].addMouseListener(new MouseDetected());
+               pan.add(graphicObjectsList[i]);
+
+            }
+            add(pan, BorderLayout.CENTER);
             setVisible(true);
 
             addWindowListener(new WindowCloser());
@@ -136,24 +151,29 @@ class GraphicObject extends JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                /*if (clickcount == 6) {
-                    System.exit(0);
-                }*/
-                Point curPoint = e.getLocationOnScreen();
+
+
                 GraphicObject curGraphicObject = (GraphicObject) e.getSource();
-                System.out.println("Mouse point" + curPoint.x + " " + curPoint.y);
-                JPanel pan = (JPanel) e.getComponent();
 
                 if (curGraphicObject.amountValue == -1) {
+
                     Random random = new Random();
                     int amountValue = amountArr[random.nextInt(101)];
                     curGraphicObject.setAmountValue(amountValue);
-                    totalAmount += amountValue;
                     clickcount++;
                 }
-                repaint();
-            }
+                pan.repaint();
 
+                if (clickcount == 6) {
+
+                    Panel pan2 = new Panel();
+                    add(pan2, BorderLayout.CENTER);
+                    remove(pan);
+                    repaint();
+                    System.out.println("************EXuted************");
+                }
+
+            }
         }
 
         class WindowCloser extends WindowAdapter {
@@ -167,3 +187,4 @@ class GraphicObject extends JPanel {
             HiddenMoneyGame game = new HiddenMoneyGame("GAME", 400, 400, 500, 50);
         }
     }
+
